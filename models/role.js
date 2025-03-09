@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
-const { Sequelize } = require("../config/dbConfig");
+const sequelize   = require("../config/dbConfig");
 
-const role = Sequelize.define(
+const role = sequelize.define(
   "role",
   {
     role_id: {
@@ -10,12 +10,12 @@ const role = Sequelize.define(
       primaryKey: true,
     },
     role_name: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING,
       allowNull: false,
     },
   },
   {
-    timeStamp: true,
+    timestamps: true,
     tableName: "role",
   }
 );

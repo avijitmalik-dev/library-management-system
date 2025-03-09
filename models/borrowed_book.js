@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
-const { Sequelize } = require("../config/dbConfig");
+const sequelize = require("../config/dbConfig");
 
-const borrowedBook = Sequelize.define(
+const borrowedBook = sequelize.define(
   "borrowedBook",
   {
     borrowed_id: {
@@ -16,9 +16,14 @@ const borrowedBook = Sequelize.define(
     returnDate: {
       type: DataTypes.DATE,
     },
+    status: { 
+      type: DataTypes.ENUM,
+      values: ['borrowed', 'returned'],
+      defaultValue: 'borrowed'
+    }
   },
   {
-    timeStamp: true,
+    timestamps: true,
     tableName: "borrowedBook",
   }
 );

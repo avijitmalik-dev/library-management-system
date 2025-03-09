@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
-const { Sequelize } = require("../config/dbConfig");
+const sequelize = require("../config/dbConfig");
 
-const book = Sequelize.afterDefine(
+const book = sequelize.afterDefine(
   "book",
   {
     book_id: {
@@ -10,15 +10,15 @@ const book = Sequelize.afterDefine(
       primaryKey: true,
     },
     title: {
-      type: DataTypes.STRING(200),
+      type: DataTypes.STRING,
       allowNull: false,
     },
     author: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING,
       allowNull: false,
     },
     isbn: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING,
       unique: true,
       allowNull: false,
     },
@@ -28,7 +28,7 @@ const book = Sequelize.afterDefine(
     },
   },
   {
-    timeStamp: true,
+    timestamps: true,
     tabelName: "book",
   }
 );
