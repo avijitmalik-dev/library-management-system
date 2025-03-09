@@ -1,6 +1,5 @@
 const { DataTypes } = require("sequelize");
 const sequelize   = require("../config/dbConfig");
-const role = require("./role");
 
 const user = sequelize.define(
   "user",
@@ -27,20 +26,11 @@ const user = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    role_id: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: role,
-        key: "role_id",
-      },
-      onDelete: "SET NULL",
-      onUpdate: "CASCADE",
-    },
     is_approved: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
-    user_type: {
+    role: {
       type: DataTypes.ENUM("Admin", "Librarian", "Member", "Unverified"),
       defaultValue: "Unverified",
     },

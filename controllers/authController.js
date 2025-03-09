@@ -7,7 +7,7 @@ const { registerSchema, loginSchema } = require("../schemas/authSchemas");
 
 // Generate JWT tokens
 const generateAccessToken = (user) => {
-  return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '10h' });
+  return jwt.sign(user, process.env.JWT_SECRET_KEY, { expiresIn: '10h' });
 };
 
 
@@ -34,7 +34,6 @@ exports.registerUser = async (req, res) => {
       email,
       phone,
       password: hashedPassword,
-      role_id: 4,
     });
 
     await sendPasswordEmail(email, generatedPassword);
@@ -65,7 +64,7 @@ exports.loginUser = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
-    const userPayload = { userId: user.user_id, email: user.email, role: user.user_type };
+    const userPayload = { userId: user.user_id, email: user.email, role: user.role };
     const accessToken = generateAccessToken(userPayload);
 
     res.status(200).json({
