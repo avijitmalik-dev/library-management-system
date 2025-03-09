@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const { generateSecurePassword } = require("../services/passwordService");
 const { sendPasswordEmail } = require("../services/emailService");
-const { registerSchema, loginSchema } = require("../schemas/authSchemas"); 
+const { registerSchema, loginSchema } = require("../validators/authSchemas"); 
 
 // Generate JWT tokens
 const generateAccessToken = (user) => {
@@ -15,7 +15,7 @@ const generateAccessToken = (user) => {
 // Register user
 exports.registerUser = async (req, res) => {
   const { name, email, phone } = req.body;
-
+  
   // Validate input 
   const { error } = registerSchema.validate({ name, email, phone });
   if (error) return res.status(400).json({ message: error.details[0].message });

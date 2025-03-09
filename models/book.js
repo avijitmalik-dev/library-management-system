@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/dbConfig");
 
-const book = sequelize.afterDefine(
+const book = sequelize.define(
   "book",
   {
     book_id: {
