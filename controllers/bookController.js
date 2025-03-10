@@ -1,15 +1,148 @@
 const sequelize = require("../config/dbConfig");
 const Book = require("../models/book");
-const { bookSchemas } = require("../validators/bookSchemas");
+const { createBookSchema, updateBookSchema } = require("../validators/bookSchemas");
 
-
+// create book
 exports.createBook = async (req, res) => {
-  const { title, author, isbn, availableCopies } = req.body;
-  console.log(title, author, isbn, availableCopies);
+  const data = req.body; 
+  let booksToCreate = [];
   
-  const { error, value } = bookSchemas.validate(req.body);
+  if (Array.isArray(data)) {
+    booksToCreate = data;
+  } else if (typeof data === 'object') {
+    booksToCreate = [data];
+  } else {
+    return res.status(400).json({
+      message: "Invalid data.",
+    });
+  }
+
+  // Validate each book in the array
+  const validationErrors = booksToCreate.map(book => {
+    const { error } = createBookSchema.validate(book);
+    return error;
+  }).filter(error => error !== undefined);
+
+  if (validationErrors.length > 0) {
+    return res.status(400).json({
+      message: "Validation errors",
+      details: validationErrors,
+    });
+  }
+
+  let transaction;
+  try {
+    transaction = await sequelize.transaction();
+
+    const createdBooks = [];
+    for (let book of booksToCreate) {
+      const { title, author, availableCopies } = book;
+      const uniqueISBN = `LMS-${Date.now()}`;
+      const newBook = await Book.create(
+        {
+          title,
+          author,
+          isbn: uniqueISBN,
+          availableCopies,
+        },
+        { transaction }
+      );
+      
+      createdBooks.push(newBook);
+    }
+    await transaction.commit();
+    res.status(201).json({
+      message: "Books created successfully",
+      data: createdBooks,
+    });
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+    res.status(500).json({
+      message: "Error creating books",
+      error: error.message,
+    });
+  } finally {
+    if (transaction && !transaction.finished) {
+      await transaction.rollback();
+    }
+  }
+};
 
 
+// get boooks
+exports.getBooks = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, author, startDate, endDate } = req.query;
+    const offset = (page - 1) * limit;
+
+    // Build query options
+    const queryOptions = {
+      offset,
+      limit,
+      order: [['updatedAt', 'DESC']],
+    };
+
+    // Add author filter if provided
+    if (author) {
+      queryOptions.where = { author: { [sequelize.Op.like]: `%${author}%` } };
+    }
+
+    // Add date range filter 
+    if (startDate && endDate) {
+      queryOptions.where = {
+        ...queryOptions.where,
+        updatedAt: {
+          [sequelize.Op.gte]: new Date(startDate),  
+          [sequelize.Op.lte]: new Date(endDate), 
+        },
+      };
+    } else if (startDate) {
+      // Only startDate is provided
+      queryOptions.where = {
+        ...queryOptions.where,
+        updatedAt: {
+          [sequelize.Op.gte]: new Date(startDate),
+        },
+      };
+    } else if (endDate) {
+      // Only endDate is provided
+      queryOptions.where = {
+        ...queryOptions.where,
+        updatedAt: {
+          [sequelize.Op.lte]: new Date(endDate),
+        },
+      };
+    }
+
+    const books = await Book.findAll(queryOptions);
+    const totalBooks = await Book.count();
+    const totalPages = Math.ceil(totalBooks / limit);
+
+    res.status(200).json({
+      message: "Books fetched successfully",
+      data: books,
+      pagination: {
+        page,
+        limit,
+        totalBooks,
+        totalPages,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+
+// update book 
+exports.updateBook = async (req, res) => {
+  const { id } = req.params;
+  const { title, author, isbn, availableCopies } = req.body;
+
+  const { error } = updateBookSchema.validate(req.body);
   if (error) {
     return res.status(400).json({
       message: "Validation errors",
@@ -20,26 +153,34 @@ exports.createBook = async (req, res) => {
   let transaction;
   try {
     transaction = await sequelize.transaction();
-    const newBook = await Book.create(
-      {
-        title,
-        author,
-        isbn,
-        availableCopies,
-      },
-      { transaction }
-    );
+
+    // Find the book by primary key (id)
+    const book = await Book.findByPk(id, { transaction });
+    if (!book) {
+      return res.status(204).json({ message: "Book not found" });
+    }
+
+    // Create an update object
+    const updatedBookData = {
+      title,
+      author,
+      isbn,
+      availableCopies,
+    };
+
+    // Update the book using the object format
+    await book.update(updatedBookData, { transaction });
 
     await transaction.commit();
 
-    res.status(201).json({
-      message: "Book created successfully",
-      book: newBook,
+    res.status(200).json({
+      message: "Book updated successfully",
+      book: updatedBookData,
     });
   } catch (error) {
     if (transaction) await transaction.rollback();
     res.status(500).json({
-      message: "Error creating book",
+      message: "Error updating book",
       error: error.message,
     });
   } finally {
@@ -48,3 +189,36 @@ exports.createBook = async (req, res) => {
     }
   }
 };
+
+
+
+// delete book
+exports.deleteBook = async (req, res) => {
+  const { id } = req.params;
+  let transaction;
+  try {
+
+    transaction = await sequelize.transaction();
+    const book = await Book.findByPk(id, { transaction });
+    if (!book) {
+      return res.status(204).json({ message: "Book not found" });
+    }
+    await book.destroy({ transaction });
+    await transaction.commit();
+    res.status(200).json({
+      message: "Book deleted successfully",
+    });
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+    res.status(500).json({
+      message: "Error deleting book",
+      error: error.message,
+    });
+  } finally {
+    if (transaction && !transaction.finished) {
+      await transaction.rollback();
+    }
+  }
+};
+
+
