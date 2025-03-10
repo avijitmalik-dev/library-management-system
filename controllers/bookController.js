@@ -70,7 +70,6 @@ exports.createBook = async (req, res) => {
   }
 };
 
-
 // get boooks
 exports.getBooks = async (req, res) => {
   try {
@@ -132,7 +131,6 @@ exports.getBooks = async (req, res) => {
   }
 };
 
-
 //get book ith id wise
 exports.getBookById = async (req, res) => {
   const { bookId } = req.params;
@@ -156,8 +154,6 @@ exports.getBookById = async (req, res) => {
 exports.updateBook = async (req, res) => {
   const { id } = req.params;
   const { title, author, availableCopies } = req.body;
-console.log( title, author, availableCopies , id);
-
 
   const { error } = createBookSchema.validate(req.body);
   if (error) {
@@ -204,7 +200,6 @@ console.log( title, author, availableCopies , id);
     }
   }
 };
-
 
 // delete book
 exports.deleteBook = async (req, res) => {

@@ -54,7 +54,6 @@ exports.borrowBook = async (req, res) => {
   }
 };
 
-
 // returnBook
 exports.returnBook = async (req, res) => {
   const { error } = returnBookSchema.validate(req.body);
@@ -214,7 +213,6 @@ exports.getMemberRecords = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
-
 
 // book wise librarians check record
 exports.getBookRecord = async (req, res) => {
