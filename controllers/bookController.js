@@ -1,6 +1,8 @@
 const sequelize = require("../config/dbConfig");
 const Book = require("../models/book");
-const { createBookSchema, updateBookSchema } = require("../validators/bookSchemas");
+const createBookSchema = require("../validators/bookSchemas");
+const { Op } = require('sequelize');
+
 
 // create book
 exports.createBook = async (req, res) => {
@@ -75,49 +77,45 @@ exports.getBooks = async (req, res) => {
     const { page = 1, limit = 10, author, startDate, endDate } = req.query;
     const offset = (page - 1) * limit;
 
+    console.log(author, startDate, endDate);
+
     // Build query options
     const queryOptions = {
       offset,
       limit,
       order: [['updatedAt', 'DESC']],
+      where: {},
     };
 
-    // Add author filter if provided
+    // Add author filter 
     if (author) {
-      queryOptions.where = { author: { [sequelize.Op.like]: `%${author}%` } };
+      queryOptions.where.author = { [Op.like]: `%${author}%` };
     }
 
-    // Add date range filter 
+    // filter
     if (startDate && endDate) {
-      queryOptions.where = {
-        ...queryOptions.where,
-        updatedAt: {
-          [sequelize.Op.gte]: new Date(startDate),  
-          [sequelize.Op.lte]: new Date(endDate), 
-        },
+      queryOptions.where.updatedAt = {
+        [Op.gte]: new Date(startDate),
+        [Op.lte]: new Date(endDate),
       };
     } else if (startDate) {
       // Only startDate is provided
-      queryOptions.where = {
-        ...queryOptions.where,
-        updatedAt: {
-          [sequelize.Op.gte]: new Date(startDate),
-        },
+      queryOptions.where.updatedAt = {
+        [Op.gte]: new Date(startDate),
       };
     } else if (endDate) {
       // Only endDate is provided
-      queryOptions.where = {
-        ...queryOptions.where,
-        updatedAt: {
-          [sequelize.Op.lte]: new Date(endDate),
-        },
+      queryOptions.where.updatedAt = {
+        [Op.lte]: new Date(endDate),
       };
     }
 
+    // Execute the query
     const books = await Book.findAll(queryOptions);
     const totalBooks = await Book.count();
     const totalPages = Math.ceil(totalBooks / limit);
 
+    // Return data
     res.status(200).json({
       message: "Books fetched successfully",
       data: books,
@@ -137,12 +135,15 @@ exports.getBooks = async (req, res) => {
 };
 
 
+
 // update book 
 exports.updateBook = async (req, res) => {
   const { id } = req.params;
-  const { title, author, isbn, availableCopies } = req.body;
+  const { title, author, availableCopies } = req.body;
+console.log( title, author, availableCopies , id);
 
-  const { error } = updateBookSchema.validate(req.body);
+
+  const { error } = createBookSchema.validate(req.body);
   if (error) {
     return res.status(400).json({
       message: "Validation errors",
@@ -155,6 +156,8 @@ exports.updateBook = async (req, res) => {
     transaction = await sequelize.transaction();
 
     // Find the book by primary key (id)
+    console.log(id);
+    
     const book = await Book.findByPk(id, { transaction });
     if (!book) {
       return res.status(204).json({ message: "Book not found" });
@@ -164,7 +167,6 @@ exports.updateBook = async (req, res) => {
     const updatedBookData = {
       title,
       author,
-      isbn,
       availableCopies,
     };
 
