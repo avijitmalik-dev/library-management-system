@@ -38,3 +38,8 @@ step 4: Create the necessary folder structure with useing mvc pattern:
 mkdir config controllers routes models middleware services utils
 
 
+
+
+#postman collection
+
+
