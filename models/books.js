@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/dbConfig");
 
-const book = sequelize.define(
-  "book",
+const books = sequelize.define(
+  "books",
   {
     book_id: {
       type: DataTypes.INTEGER,
@@ -22,6 +22,10 @@ const book = sequelize.define(
       unique: true,
       allowNull: false,
     },
+    totalCopies: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
     availableCopies: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
@@ -29,7 +33,7 @@ const book = sequelize.define(
   },
   {
     timestamps: true,
-    tabelName: "book",
+    tabelName: "books",
   }
 );
-module.exports = book;
+module.exports = books;

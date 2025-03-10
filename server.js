@@ -4,7 +4,8 @@ const sequelize = require('./config/dbConfig');
 const authRoute = require('./routes/authRoutes');
 const userRoute = require('./routes/userRoutes');
 const bookRoute = require('./routes/bookRoutes');
-
+const borrowRoute = require('./routes/borrowRoutes');
+require('./associations/associations');
 
 
 const app = express();
@@ -14,6 +15,8 @@ app.use(express.json());
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
 app.use('/api/book', bookRoute);
+app.use('/api/borrow', borrowRoute);
+
 
 const PORT = process.env.PORT || 3000
 

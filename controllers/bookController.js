@@ -1,5 +1,5 @@
 const sequelize = require("../config/dbConfig");
-const Book = require("../models/book");
+const Book = require("../models/books");
 const createBookSchema = require("../validators/bookSchemas");
 const { Op } = require('sequelize');
 
@@ -77,8 +77,6 @@ exports.getBooks = async (req, res) => {
     const { page = 1, limit = 10, author, startDate, endDate } = req.query;
     const offset = (page - 1) * limit;
 
-    console.log(author, startDate, endDate);
-
     // Build query options
     const queryOptions = {
       offset,
@@ -135,6 +133,24 @@ exports.getBooks = async (req, res) => {
 };
 
 
+//get book ith id wise
+exports.getBookById = async (req, res) => {
+  const { bookId } = req.params;
+
+  try {
+    const book = await Book.findByPk(bookId);
+    if (!book) {
+      return res.status(204).json({ message: 'Book not found' });
+    }
+
+    res.status(200).json({
+      message: 'Book details fetched successfully',
+      data: book, 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
 
 // update book 
 exports.updateBook = async (req, res) => {
@@ -155,9 +171,6 @@ console.log( title, author, availableCopies , id);
   try {
     transaction = await sequelize.transaction();
 
-    // Find the book by primary key (id)
-    console.log(id);
-    
     const book = await Book.findByPk(id, { transaction });
     if (!book) {
       return res.status(204).json({ message: "Book not found" });
@@ -191,7 +204,6 @@ console.log( title, author, availableCopies , id);
     }
   }
 };
-
 
 
 // delete book

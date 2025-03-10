@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/user");
+const User = require("../models/users");
 const { generateSecurePassword } = require("../services/passwordService");
 const { sendPasswordEmail } = require("../services/emailService");
 const { registerSchema, loginSchema } = require("../validators/authSchemas"); 
